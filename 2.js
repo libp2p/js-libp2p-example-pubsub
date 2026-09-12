@@ -68,9 +68,9 @@ node3.services.pubsub.addEventListener('message', (evt) => {
 })
 node3.services.pubsub.subscribe(topic)
 
-// wait for subscriptions to propagate
-await hasSubscription(node1, node2, topic)
-await hasSubscription(node2, node3, topic)
+// Subscription announcements can arrive before the forwarding mesh is ready.
+await hasMeshPeer(node1, node2, topic)
+await hasMeshPeer(node2, node3, topic)
 
 const validateFruit = (msgTopic, msg) => {
   const fruit = uint8ArrayToString(msg.data)
@@ -127,16 +127,14 @@ async function waitForMessage (node, topic, data, timeout = 100) {
   })
 }
 
-// Wait for node1 to see that node2 has subscribed to the topic
-async function hasSubscription (node1, node2, topic) {
+// Wait for the mesh link needed to forward messages to the next node.
+async function hasMeshPeer (node1, node2, topic) {
   while (true) {
-    const subs = await node1.services.pubsub.getSubscribers(topic)
-
-    if (subs.map(peer => peer.toString()).includes(node2.peerId.toString())) {
+    if (node1.services.pubsub.getMeshPeers(topic).includes(node2.peerId.toString())) {
       return
     }
 
-    // wait for subscriptions to propagate
+    // Wait for mesh maintenance to include the peer.
     await delay(100)
   }
 }
