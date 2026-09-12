@@ -14,6 +14,12 @@ export async function test () {
   })
   proc.kill()
 
+  for (const fruit of ['banana', 'apple', 'orange']) {
+    if (!matches.input.includes(`node3 received: ${fruit}`)) {
+      throw new Error(`node3 should have received '${fruit}'`)
+    }
+  }
+
   // 'car' fails validation, so node2 never re-shares it - it must be absent
   // from everything printed up to the final valid message
   if (matches.input.includes('node3 received: car')) {
